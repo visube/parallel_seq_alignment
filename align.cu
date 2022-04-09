@@ -27,12 +27,31 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 #endif
 
 __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
-    for(int i = 0; i < N1 + N2 - 1; i++){
+    int worker_count;
+    int max_concurrency = N1 < N2 ? N1 : N2;
+    int num_iter = N1 + N2 - 1;
+    for(int i = 0; i < num_iter; i++){
         // Compute if self is worker for this iteration
+        if(i < max_concurrency){
+            worker_count = i + 1;
+        }else if(i >= num_iter - max_concurrency){
+            worker_count = num_iter - i;
+        }else{
+            worker_count = max_concurrency;
+        }
 
-        // Update matrix
+        int worker_index = blockIdx.x * MAX_BLOCK_SIZE + threadIdx.x;
 
-        // sync threads 
+        if(worker_index < worker_count){
+            // Update matrix 
+            
+        }
+        
+
+        
+
+        // sync threads
+        cudaDeviceSynchronize();
     }
 }
 
