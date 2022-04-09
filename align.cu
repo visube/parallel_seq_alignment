@@ -26,30 +26,27 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 #define cudaCheckError(ans) ans
 #endif
 
+// Implementation requires N1 >= N2;
+
 __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
-    int worker_count;
-    int max_concurrency = N1 < N2 ? N1 : N2;
     int num_iter = N1 + N2 - 1;
+    int worker_index = blockIdx.x * MAX_BLOCK_SIZE + threadIdx.x;
+    int x_index = worker_index + 1;
+    int y_index = 1;
+    int iters_to_work = N1; 
+    int worker_start_delay = worker_index; 
     for(int i = 0; i < num_iter; i++){
-        // Compute if self is worker for this iteration
-        if(i < max_concurrency){
-            worker_count = i + 1;
-        }else if(i >= num_iter - max_concurrency){
-            worker_count = num_iter - i;
-        }else{
-            worker_count = max_concurrency;
+        // Only work for 'iters_to_work' iterations, with delay 'worker_start_delay'
+        // This gives correct update behavior
+        if(worker_start_delay <= i && i < worker_start_delay + iters_to_work){
+            int match = seq1[y_index] == seq2[x_index] ? 1 : -1;
+            int score_top = matrix[(y_index - 1) * N2 + x_index] - 1;
+            int score_left = matrix[y_index * N2 + x_index - 1] - 1;
+            int score_topleft = matrix[(y_index - 1) * N2 + x_index - 1] + match;
+            int max = std::max({score_top, score_left, score_topleft});
+            matrix[y_index * N2 + x_index] = max;
+            y_index++;
         }
-
-        int worker_index = blockIdx.x * MAX_BLOCK_SIZE + threadIdx.x;
-
-        if(worker_index < worker_count){
-            // Update matrix 
-            
-        }
-        
-
-        
-
         // sync threads
         cudaDeviceSynchronize();
     }
