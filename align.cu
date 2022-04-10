@@ -39,16 +39,19 @@ __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
         // Only work for 'iters_to_work' iterations, with delay 'worker_start_delay'
         // This gives correct update behavior
         if(worker_start_delay <= i && i < worker_start_delay + iters_to_work){
-            int match = seq1[y_index] == seq2[x_index] ? 1 : -1;
-            int score_top = matrix[(y_index - 1) * N2 + x_index] - 1;
-            int score_left = matrix[y_index * N2 + x_index - 1] - 1;
-            int score_topleft = matrix[(y_index - 1) * N2 + x_index - 1] + match;
-            int max = std::max({score_top, score_left, score_topleft});
-            matrix[y_index * N2 + x_index] = max;
+            int match = seq1[y_index-1] == seq2[x_index-1] ? 1 : -1;
+            int score_top = matrix[(y_index - 1) * (N2 + 1) + x_index] - 1;
+            int score_left = matrix[y_index * (N2 + 1) + x_index - 1] - 1;
+            int score_topleft = matrix[(y_index - 1) * (N2 + 1) + x_index - 1] + match;
+            int max = score_top > score_left ? score_top : score_left;
+            max = max > score_topleft ? max : score_topleft;
+            printf("iter: %d, worker: %d, x:%d, y:%d, match:%d, max:%d\n", 
+            i, worker_index, x_index, y_index, match, max);
+            matrix[y_index * (N2+1) + x_index] = max;
             y_index++;
         }
         // sync threads
-        cudaDeviceSynchronize();
+        __syncthreads();
     }
 }
 
@@ -65,9 +68,9 @@ void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
     cudaCheckError(cudaMalloc(&dev_matrix, (N1+1)*(N2+1)*sizeof(int)));
 
     // Copy data host to device
-    cudaCheckError(cudaMemcpy(dev_seq1, seq1, N1, cudaMemcpyHostToDevice));
-    cudaCheckError(cudaMemcpy(dev_seq2, seq2, N2, cudaMemcpyHostToDevice));
-    cudaCheckError(cudaMemcpy(dev_matrix, matrix, (N1+1)*(N2+1), cudaMemcpyHostToDevice));
+    cudaCheckError(cudaMemcpy(dev_seq1, seq1, N1*sizeof(int), cudaMemcpyHostToDevice));
+    cudaCheckError(cudaMemcpy(dev_seq2, seq2, N2*sizeof(int), cudaMemcpyHostToDevice));
+    cudaCheckError(cudaMemcpy(dev_matrix, matrix, (N1+1)*(N2+1)*sizeof(int), cudaMemcpyHostToDevice));
 
     // Smaller of N1 and N2 decides how many elements in the matrix can be processed together
     int max_concurrency = N1 < N2 ? N1 : N2;
@@ -79,10 +82,13 @@ void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
     printf("------------BLOCKSIZE:%d GRIDSIZE:%d------------\n",block_size, grid_size);
     
     // Kernel call
-
+    align_kernel<<<gridDim, blockDim>>>(N1, N2, dev_seq1, dev_seq2, dev_matrix);
+    cudaDeviceSynchronize();
 
     cudaError_t err = cudaGetLastError();
-    if ( err != cudaSuccess )  printf("CUDA Error: %s\n", cudaGetErrorString(err));       
+    if ( err != cudaSuccess )  printf("CUDA Error: %s\n", cudaGetErrorString(err));
+
+    cudaCheckError(cudaMemcpy(matrix, dev_matrix, (N1+1)*(N2+1)*sizeof(int), cudaMemcpyDeviceToHost));
 
     // Free device memory 
     cudaCheckError(cudaFree(dev_seq1));
