@@ -42,4 +42,8 @@ Performance tuning and performance evaluation on PSC machine. Compare the perfor
 Finish final report <br>
 5/1 <br>
 Finish poster <br>
-	
+
+### 4/11 MILESTONE
+Current implementation takes input sequences seq1 and seq2 of lengths N1 and N2, and spawns min(N1,N2) workers. Each of the worker will start at matrix(1,workerIdx). The worker index will also be the delay for it to start, and each will work for N1 iters. This effectively updates the matrix elements forming lines that are parallel to the second diagonal. In each of the iteration, the calculations and updates are independent of other components calcuated concurrectly but relies on results from previous 2 iterations. 
+
+Next step would be to compare performance versus the baselayer matrix calculation of the biopython library. To do so, input file parsing and file output need to be added, a python script can be created to randomly generate sequences and compare correctness and speed. 

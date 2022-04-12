@@ -45,8 +45,8 @@ __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
             int score_topleft = matrix[(y_index - 1) * (N2 + 1) + x_index - 1] + match;
             int max = score_top > score_left ? score_top : score_left;
             max = max > score_topleft ? max : score_topleft;
-            printf("iter: %d, worker: %d, x:%d, y:%d, match:%d, max:%d\n", 
-            i, worker_index, x_index, y_index, match, max);
+            /*printf("iter: %d, worker: %d, x:%d, y:%d, match:%d, max:%d\n", 
+            i, worker_index, x_index, y_index, match, max);*/
             matrix[y_index * (N2+1) + x_index] = max;
             y_index++;
         }
