@@ -58,31 +58,25 @@ int main(int argc, char **argv) {
     }
     
     string line;
-    ifstream infile("input_seq");
-    
-    // first line is sizes of two input sequences
+    ifstream infile(input_file);
+    // first line is sequence 1
     getline(infile,line);
-    if(line.size() != 2){
-        cout << "First line of input file has size " << line.size() << " exiting\n";
-        return 1;
-    }
-    int N1, N2;
-    N1 = (int)line[0] - 48;
-    N2 = (int)line[1] - 48;
+    int N1 = line.size();
     int* seq1 = (int*)calloc(N1, sizeof(int));
-    int* seq2 = (int*)calloc(N2, sizeof(int));
-
-    // second line is sequence 1
-    getline(infile,line);
-    for(string::size_type i = 0; i < line.size(); ++i){
+    for(string::size_type i = 0; i < (unsigned)N1; ++i){
         seq1[i] = (int)line[i] - 48;
     }
-    // third line is sequence 2
+    // second line is sequence 2
     getline(infile,line);
-    for(string::size_type i = 0; i < line.size(); ++i){
+    int N2 = line.size();
+    int* seq2 = (int*)calloc(N2, sizeof(int));
+    for(string::size_type i = 0; i < (unsigned)N2; ++i){
         seq2[i] = (int)line[i] - 48;
     }
-
+    if(N1 < N2){
+        cout << "Invalid input file, first sequence must be longer or equal to second sequence\nExiting..\n" ;
+        return 1;
+    }
     printCudaInfo();
     
     int *matrix = (int*)calloc((N1+1)*(N2+1), sizeof(int));

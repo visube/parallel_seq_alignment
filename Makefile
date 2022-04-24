@@ -12,7 +12,7 @@ CC_FILES   := main.cpp
 ARCH=$(shell uname | sed -e 's/-.*//g')
 
 OBJDIR=objs
-CXX=g++ -m64
+CXX=g++ -std=c++11 -m64
 CXXFLAGS=-O3 -Wall
 LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
 NVCC=nvcc
