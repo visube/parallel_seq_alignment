@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+using namespace std;
 
 
 void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix);
@@ -15,39 +20,70 @@ float toBW(int bytes, float sec) {
 void usage(const char *progname) {
     printf("Usage: %s [options]\n", progname);
     printf("Program Options:\n");
-    printf("  -n  --arraysize <INT>  Number of elements in arrays\n");
-    printf("  -?  --help             This message\n");
+    printf("  -f  --file    Input filename\n");
+    printf("  -?  --help    This message\n");
 }
 
 int main(int argc, char **argv) {
+    std::string input_file;
+
+    // Parse commandline options
+    int opt;
+    int file_specified = 0;
+    static struct option long_options[] = {
+        {"file", 0, 0, 'f'},
+        {"help", 0, 0, '?'},
+        {0, 0, 0, 0}
+    };
+    
+    while ((opt = getopt_long(argc, argv, "f:?", long_options, NULL)) != EOF) {
+        switch (opt) {
+        case 'f':
+            input_file = optarg;
+            file_specified = 1;
+            break;
+        case '?':
+        default:
+            usage(argv[0]);
+            return 1;
+        }
+    }
+    // End parsing of commandline options
+    
+    if(file_specified){
+        cout << "Input file name: " << input_file << "\n";
+    }else{
+        usage(argv[0]);
+        return 1;
+    }
+    
+    string line;
+    ifstream infile("input_seq");
+    
+    // first line is sizes of two input sequences
+    getline(infile,line);
+    if(line.size() != 2){
+        cout << "First line of input file has size " << line.size() << " exiting\n";
+        return 1;
+    }
+    int N1, N2;
+    N1 = (int)line[0] - 48;
+    N2 = (int)line[1] - 48;
+    int* seq1 = (int*)calloc(N1, sizeof(int));
+    int* seq2 = (int*)calloc(N2, sizeof(int));
+
+    // second line is sequence 1
+    getline(infile,line);
+    for(string::size_type i = 0; i < line.size(); ++i){
+        seq1[i] = (int)line[i] - 48;
+    }
+    // third line is sequence 2
+    getline(infile,line);
+    for(string::size_type i = 0; i < line.size(); ++i){
+        seq2[i] = (int)line[i] - 48;
+    }
+
     printCudaInfo();
-
-    //Manually set test input for now
-    int N1 = 10;
-    int N2 = 7;
-    int* seq1 = (int*)calloc(10, sizeof(int));
-    int* seq2 = (int*)calloc(7, sizeof(int));
-    seq1[0] = 3;
-    seq1[1] = 0;
-    seq1[2] = 1;
-    seq1[3] = 1;
-    seq1[4] = 0;
-    seq1[5] = 2;
-    seq1[6] = 0;
-    seq1[7] = 1;
-    seq1[8] = 3;
-    seq1[9] = 2;
-    seq2[0] = 3;
-    seq2[1] = 2;
-    seq2[2] = 0;
-    seq2[3] = 1;
-    seq2[4] = 3;
-    seq2[5] = 2;
-    seq2[6] = 3;
-
-    /*
-    seq1 = {3, 0, 1, 1, 0, 2, 0};
-    seq2 = {3, 2, 0, 1, 3, 2, 3};*/
     
     int *matrix = (int*)calloc((N1+1)*(N2+1), sizeof(int));
 
