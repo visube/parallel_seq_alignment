@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
     compute_time += duration_cast<dsec>(Clock::now() - compute_start).count();
     printf("Computation Time: %lf.\n", compute_time);
 
-    printMatrix(score_matrix, N1, N2);
+    // printMatrix(score_matrix, N1, N2);
     free(score_matrix);
     free(seq1);
     free(seq2);
@@ -138,8 +138,9 @@ void printMatrix(int* matrix, int n1, int n2) {
 }
 
 void compute(int* matrix, int n1, int n2, int*seq1, int*seq2) {
-    #pragma omp parallel for 
+    #pragma omp parallel 
     for(int i = 1; i < n1 + n2 - 1; i++) {
+        #pragma omp for schedule(auto)
         for(int j = max(1, i-n1+2); j < min(n2, i+1); j++) {
             int y_index = j;
             int x_index = i - j + 1;
