@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     alignCuda(N1, N2, seq1, seq2, matrix);
 
     ofstream outfile;
-    outfile.open("output_matrix");
+    outfile.open("cuda_output_matrix");
     if(!outfile){
         cout << "Output file creation failed\n";
     }else{

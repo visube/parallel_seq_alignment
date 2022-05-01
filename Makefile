@@ -1,17 +1,17 @@
 
-EXECUTABLE := align
+CUDA_EXECUTABLE := align
 
-CU_FILES   := align.cu
+CU_FILES   := cuda/align.cu
 
 CU_DEPS    :=
 
-CC_FILES   := main.cpp
+CUDA_CC_FILES   := cuda/main.cpp
 
 ###########################################################
 
 ARCH=$(shell uname | sed -e 's/-.*//g')
 
-OBJDIR=objs
+OBJDIR=cuda/objs
 CXX=g++ -std=c++11 -m64
 CXXFLAGS=-O3 -Wall
 LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
@@ -23,21 +23,21 @@ OBJS=$(OBJDIR)/main.o  $(OBJDIR)/align.o
 
 .PHONY: dirs clean
 
-all: $(EXECUTABLE)
+all: $(CUDA_EXECUTABLE)
 
-default: $(EXECUTABLE)
+cuda: $(CUDA_EXECUTABLE)
 
 dirs:
 		mkdir -p $(OBJDIR)/
 
 clean:
-		rm -rf $(OBJDIR) *.ppm *~ $(EXECUTABLE)
+		rm -rf $(OBJDIR) *.ppm *~ $(CUDA_EXECUTABLE)
 
-$(EXECUTABLE): dirs $(OBJS)
+$(CUDA_EXECUTABLE): dirs $(OBJS)
 		$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-$(OBJDIR)/%.o: %.cpp
+$(OBJDIR)/%.o: cuda/%.cpp
 		$(CXX) $< $(CXXFLAGS) -c -o $@
 
-$(OBJDIR)/%.o: %.cu
+$(OBJDIR)/%.o: cuda/%.cu
 		$(NVCC) $< $(NVCCFLAGS) -c -o $@
