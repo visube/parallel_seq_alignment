@@ -97,19 +97,20 @@ int main(int argc, char **argv) {
     int* score_matrix = (int*)calloc(N1 * N2, sizeof(int));
 
     // initialize the first row of the matrix
-    for (int i = 0; i < N1; i++) {
+    for (int i = 0; i < N2; i++) {
         score_matrix[i] = -i;
     }
     // initialize the first column of the matrix
-    for (int i = 0; i < N2; i++) {
-        score_matrix[i * N1] = -i;
+    for (int i = 0; i < N1; i++) {
+        score_matrix[i * N2] = -i;
     }
+
     init_time += duration_cast<dsec>(Clock::now() - init_start).count();
     printf("Initialization Time: %lf.\n", init_time);
 
     auto compute_start = Clock::now();
     double compute_time = 0;
-    compute(score_matrix, N1, N2, seq1, seq2);
+    compute(score_matrix, N2, N1, seq2, seq1);
     compute_time += duration_cast<dsec>(Clock::now() - compute_start).count();
     printf("Computation Time: %lf.\n", compute_time);
 
@@ -119,9 +120,9 @@ int main(int argc, char **argv) {
         cout << "Output file creation failed\n";
     }else{
         cout << "Output file creation succeeded\n";
-        for(int i = 0; i < N2; i++){
-            for(int j = 0; j < N1; j++){
-                outfile << score_matrix[i * N1 + j] << " ";
+        for(int i = 0; i < N1; i++){
+            for(int j = 0; j < N2; j++){
+                outfile << score_matrix[i * N2 + j] << " ";
             }
             outfile << "\n";
         }
