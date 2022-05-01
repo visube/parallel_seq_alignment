@@ -99,8 +99,7 @@ int main(int argc, char **argv) {
     //             printf("  %d", matrix[row*(N2+1)+col]);
     //         }else{
     //             printf(" %d", matrix[row*(N2+1)+col]);
-    //         }
-            
+    //         }  
     //     }
     //     printf("\n");
     // }
@@ -108,7 +107,7 @@ int main(int argc, char **argv) {
     alignCuda(N1, N2, seq1, seq2, matrix);
 
     ofstream outfile;
-    outfile.open("output_seq");
+    outfile.open("output_matrix");
     if(!outfile){
         cout << "Output file creation failed\n";
     }else{
@@ -127,7 +126,7 @@ int main(int argc, char **argv) {
     //     if(i == 0){
     //         printf("    ");
     //     }else{
-    //         printf("  %d", seq2[i]);
+    //         printf("  %d", seq2[i-1]);
     //     }
     // }
     // printf("\n");
@@ -142,8 +141,7 @@ int main(int argc, char **argv) {
     //             printf("  %d", matrix[row*(N2+1)+col]);
     //         }else{
     //             printf(" %d", matrix[row*(N2+1)+col]);
-    //         }
-            
+    //         }   
     //     }
     //     printf("\n");
     // }
