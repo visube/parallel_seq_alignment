@@ -59,6 +59,10 @@ int main(int argc, char **argv) {
     
     string line;
     ifstream infile(input_file);
+    if(infile.fail()){
+        cout << "Input file '" << input_file << "' does not exit\nExiting..\n";
+        return 1;
+    }
     // first line is sequence 1
     getline(infile,line);
     int N1 = line.size();
@@ -74,7 +78,7 @@ int main(int argc, char **argv) {
         seq2[i] = (int)line[i] - 48;
     }
     if(N1 < N2){
-        cout << "Invalid input file, first sequence must be longer or equal to second sequence\nExiting..\n" ;
+        cout << "Invalid input file, first sequence must be longer or equal to second sequence\nExiting..\n";
         return 1;
     }
     printCudaInfo();
@@ -88,46 +92,61 @@ int main(int argc, char **argv) {
         matrix[col] = -1*col;
     }
 
-    printf("original matrix:\n");
-    for(int row = 0; row < N1 + 1; row++){
-        for(int col = 0; col < N2 + 1; col++){
-            if(matrix[row*(N2+1)+col] >=0){
-                printf("  %d", matrix[row*(N2+1)+col]);
-            }else{
-                printf(" %d", matrix[row*(N2+1)+col]);
-            }
+    // printf("original matrix:\n");
+    // for(int row = 0; row < N1 + 1; row++){
+    //     for(int col = 0; col < N2 + 1; col++){
+    //         if(matrix[row*(N2+1)+col] >=0){
+    //             printf("  %d", matrix[row*(N2+1)+col]);
+    //         }else{
+    //             printf(" %d", matrix[row*(N2+1)+col]);
+    //         }
             
-        }
-        printf("\n");
-    }
+    //     }
+    //     printf("\n");
+    // }
 
     alignCuda(N1, N2, seq1, seq2, matrix);
 
-    printf("final matrix:\n");
-    for(int i = 0; i < N2 + 1; i++){
-        if(i == 0){
-            printf("    ");
-        }else{
-            printf("  %d", seq2[i]);
-        }
-    }
-    printf("\n");
-    for(int row = 0; row < N1 + 1; row++){
-        if(row != 0){
-            printf("%d", seq1[row-1]);
-        }else{
-            printf(" ");
-        }
-        for(int col = 0; col < N2 + 1; col++){
-            if(matrix[row*(N2+1)+col] >=0){
-                printf("  %d", matrix[row*(N2+1)+col]);
-            }else{
-                printf(" %d", matrix[row*(N2+1)+col]);
+    ofstream outfile;
+    outfile.open("output_seq");
+    if(!outfile){
+        cout << "Output file creation failed\n";
+    }else{
+        cout << "Output file creation succeeded\n";
+        for(int row = 0; row < N1 + 1; row++){
+            for(int col = 0; col < N2 + 1; col++){
+                outfile << matrix[row * (N2 + 1) + col] << " ";
             }
-            
+            outfile << "\n";
         }
-        printf("\n");
+        
     }
+
+    // printf("final matrix:\n");
+    // for(int i = 0; i < N2 + 1; i++){
+    //     if(i == 0){
+    //         printf("    ");
+    //     }else{
+    //         printf("  %d", seq2[i]);
+    //     }
+    // }
+    // printf("\n");
+    // for(int row = 0; row < N1 + 1; row++){
+    //     if(row != 0){
+    //         printf("%d", seq1[row-1]);
+    //     }else{
+    //         printf(" ");
+    //     }
+    //     for(int col = 0; col < N2 + 1; col++){
+    //         if(matrix[row*(N2+1)+col] >=0){
+    //             printf("  %d", matrix[row*(N2+1)+col]);
+    //         }else{
+    //             printf(" %d", matrix[row*(N2+1)+col]);
+    //         }
+            
+    //     }
+    //     printf("\n");
+    // }
 
     return 0;
 

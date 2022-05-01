@@ -79,8 +79,8 @@ void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
     dim3 blockDim(block_size);
     int grid_size = (max_concurrency + block_size - 1) / block_size;
     dim3 gridDim(grid_size);
-    printf("------------BLOCKSIZE:%d GRIDSIZE:%d------------\n",block_size, grid_size);
-    
+    printf("-----------------BLOCKSIZE:%d GRIDSIZE:%d-----------------\n",block_size, grid_size);
+
     // Kernel call
     align_kernel<<<gridDim, blockDim>>>(N1, N2, dev_seq1, dev_seq2, dev_matrix);
     cudaDeviceSynchronize();
