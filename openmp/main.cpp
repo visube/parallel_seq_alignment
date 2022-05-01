@@ -113,7 +113,20 @@ int main(int argc, char **argv) {
     compute_time += duration_cast<dsec>(Clock::now() - compute_start).count();
     printf("Computation Time: %lf.\n", compute_time);
 
-    printMatrix(score_matrix, N1, N2);
+    ofstream outfile;
+    outfile.open("openmp_output_matrix");
+    if(!outfile){
+        cout << "Output file creation failed\n";
+    }else{
+        cout << "Output file creation succeeded\n";
+        for(int i = 0; i < N2; i++){
+            for(int j = 0; j < N1; j++){
+                outfile << score_matrix[i * N1 + j] << " ";
+            }
+            outfile << "\n";
+        }
+        
+    }
     free(score_matrix);
     free(seq1);
     free(seq2);
