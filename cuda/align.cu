@@ -30,14 +30,15 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 
 // Implementation requires N1 >= N2;
 
-__global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
+__global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix, int pass, int x_concurrency){
     //auto g = cg::this_grid();
-    int num_iter = N1 + N2 - 1;
-    int worker_index = blockIdx.x * blockDim.x + threadIdx.x;
+    if(threadIdx.x >= x_concurrency) return;
+    int num_iter = N1 + x_concurrency - 1;
+    int worker_index = pass * blockDim.x + threadIdx.x;
     int x_index = worker_index + 1;
     int y_index = 1;
     int iters_to_work = N1; 
-    int worker_start_delay = worker_index;
+    int worker_start_delay = threadIdx.x;
     for(int i = 0; i < num_iter; i++){
         // Only work for 'iters_to_work' iterations, with delay 'worker_start_delay'
         // This gives correct update behavior
@@ -82,16 +83,29 @@ void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
     // Smaller of MAX_BLOCK_SIZE(decided by architecture) and max_concurrency decides block size
     int block_size = max_concurrency < MAX_BLOCK_SIZE ? max_concurrency : MAX_BLOCK_SIZE;
     dim3 blockDim(block_size);
-    int grid_size = (max_concurrency + block_size - 1) / block_size;
-    dim3 gridDim(grid_size);
-    printf("-----------------BLOCKSIZE:%d GRIDSIZE:%d-----------------\n",block_size, grid_size);
+    dim3 gridDim(1);
+    int num_pass = (max_concurrency + block_size - 1) / block_size;
+    printf("-----------------BLOCKSIZE:%d GRIDSIZE:%d-----------------\n",block_size, 1);
     
     // Kernal timer
     double kernalStartTime = CycleTimer::currentSeconds();
 
     // Kernel call
-    align_kernel<<<gridDim, blockDim>>>(N1, N2, dev_seq1, dev_seq2, dev_matrix);
-    cudaDeviceSynchronize();
+    for(int i = 0; i < num_pass; i++){
+        int x_concurrency;
+        if(i == num_pass-1){
+            x_concurrency = max_concurrency % block_size;
+            if(x_concurrency == 0){
+                x_concurrency = block_size;
+            }
+        }else{
+            x_concurrency = block_size;
+        }
+        printf("N1: %d, N2: %d, pass: %d, x_concurrency:%d\n", N1, N2, i, x_concurrency);
+        align_kernel<<<gridDim, blockDim>>>(N1, N2, dev_seq1, dev_seq2, dev_matrix, i, x_concurrency);
+        cudaDeviceSynchronize();
+    }
+    
 
     // End of timer and printout
     double kernalEndTime = CycleTimer::currentSeconds();
