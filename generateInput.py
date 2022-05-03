@@ -1,6 +1,6 @@
 import random
 
-input_length = 100
+input_length = 1024
 seq1 = []
 seq2 = []
 

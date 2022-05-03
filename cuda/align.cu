@@ -1,8 +1,10 @@
 #include <stdio.h>
-
+#include <algorithm>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <driver_functions.h>
+#include <cooperative_groups.h>
+namespace cg = cooperative_groups;
 
 #include "CycleTimer.h"
 
@@ -29,12 +31,13 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort=
 // Implementation requires N1 >= N2;
 
 __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
+    //auto g = cg::this_grid();
     int num_iter = N1 + N2 - 1;
-    int worker_index = blockIdx.x * MAX_BLOCK_SIZE + threadIdx.x;
+    int worker_index = blockIdx.x * blockDim.x + threadIdx.x;
     int x_index = worker_index + 1;
     int y_index = 1;
     int iters_to_work = N1; 
-    int worker_start_delay = worker_index; 
+    int worker_start_delay = worker_index;
     for(int i = 0; i < num_iter; i++){
         // Only work for 'iters_to_work' iterations, with delay 'worker_start_delay'
         // This gives correct update behavior
@@ -51,8 +54,10 @@ __global__ void align_kernel(int N1, int N2, int* seq1, int* seq2, int* matrix){
             y_index++;
         }
         // sync threads
+        // cooperative_groups::this_grid().sync();
         __syncthreads();
     }
+    //g.sync();
 }
 
 void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
@@ -80,10 +85,18 @@ void alignCuda(int N1, int N2, int* seq1, int*seq2, int* matrix){
     int grid_size = (max_concurrency + block_size - 1) / block_size;
     dim3 gridDim(grid_size);
     printf("-----------------BLOCKSIZE:%d GRIDSIZE:%d-----------------\n",block_size, grid_size);
+    
+    // Kernal timer
+    double kernalStartTime = CycleTimer::currentSeconds();
 
     // Kernel call
     align_kernel<<<gridDim, blockDim>>>(N1, N2, dev_seq1, dev_seq2, dev_matrix);
     cudaDeviceSynchronize();
+
+    // End of timer and printout
+    double kernalEndTime = CycleTimer::currentSeconds();
+    double kernalOverallDuration = kernalEndTime - kernalStartTime;
+    printf("Kernel: %.3f ms\n", 1000.f * kernalOverallDuration);  
 
     cudaError_t err = cudaGetLastError();
     if ( err != cudaSuccess )  printf("CUDA Error: %s\n", cudaGetErrorString(err));

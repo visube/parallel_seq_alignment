@@ -20,7 +20,8 @@ CXX=g++ -std=c++11 -m64
 CXXFLAGS=-O3 -Wall
 LDFLAGS=-L/usr/local/depot/cuda-10.2/lib64/ -lcudart
 NVCC=nvcc
-NVCCFLAGS=-O3 -m64 --gpu-architecture compute_61 -ccbin /usr/bin/gcc
+NVCCFLAGS=-O3 -m64 --gpu-architecture compute_61 -ccbin /usr/bin/gcc --std=c++11
+#NVCCFLAGS= -O3 -m64 --std=c++11 -rdc=true --gpu-architecture compute_61  -ccbin /usr/bin/gcc
 OPENMP_CXXFLAGS = -I. -O3 -Wall -fopenmp -Wno-unknown-pragmas
 
 OBJS=$(OBJDIR)/main.o  $(OBJDIR)/align.o
